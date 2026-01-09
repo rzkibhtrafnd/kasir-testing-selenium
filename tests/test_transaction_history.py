@@ -1,86 +1,49 @@
-from pages.login_page import LoginPage
 from pages.transaction_history_page import TransactionHistoryPage
-from config.env import ADMIN_EMAIL, ADMIN_PASSWORD
 
+def test_view_transaction_history_page(login_admin):
+    history = TransactionHistoryPage(login_admin)
+    history.open()
 
-# TC-RiwTran-001
-def test_view_transaction_history_page(driver):
-    login = LoginPage(driver)
-    login.open_login()
-    login.login(ADMIN_EMAIL, ADMIN_PASSWORD)
+    assert history.count() >= 0
 
-    history = TransactionHistoryPage(driver)
-    history.open_index()
-
-    assert history.count_rows() >= 0
-
-
-# TC-RiwTran-002
-def test_filter_and_paginate_transaction_history(driver):
-    login = LoginPage(driver)
-    login.open_login()
-    login.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-
-    history = TransactionHistoryPage(driver)
-    history.open_index()
+def test_filter_and_paginate_transaction_history(login_admin):
+    history = TransactionHistoryPage(login_admin)
+    history.open()
     history.filter_by_month_year(month=1, year=2025)
 
-    assert history.count_rows() >= 0
+    assert history.count() >= 0
 
-
-# TC-RiwTran-003
-def test_new_transaction_button_redirect(driver):
-    login = LoginPage(driver)
-    login.open_login()
-    login.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-
-    history = TransactionHistoryPage(driver)
-    history.open_index()
+def test_new_transaction_button_redirect(login_admin):
+    history = TransactionHistoryPage(login_admin)
+    history.open()
     history.click_new_transaction()
 
-    assert "/transactions/create" in driver.current_url
+    assert "/transactions/create" in history.current_url()
 
-
-# TC-RiwTran-004
-def test_download_transaction_report_pdf(driver):
-    login = LoginPage(driver)
-    login.open_login()
-    login.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-
-    history = TransactionHistoryPage(driver)
-    history.open_index()
+def test_download_transaction_report_pdf(login_admin):
+    history = TransactionHistoryPage(login_admin)
+    history.open()
 
     url = history.get_report_download_url()
 
     assert url.endswith("/transactions/report/pdf")
 
-# TC-RiwTran-006
-def test_open_transaction_detail(driver):
-    login = LoginPage(driver)
-    login.open_login()
-    login.login(ADMIN_EMAIL, ADMIN_PASSWORD)
+def test_open_transaction_detail(login_admin):
+    history = TransactionHistoryPage(login_admin)
+    history.open()
 
-    history = TransactionHistoryPage(driver)
-    history.open_index()
-
-    if history.count_rows() == 0:
+    if history.count() == 0:
         return
 
     history.open_first_detail()
-    assert "/transactions/" in driver.current_url
+    assert "/transactions/" in history.current_url()
 
+def test_open_transaction_receipt_pdf(login_admin):
+    history = TransactionHistoryPage(login_admin)
+    history.open()
 
-# TC-RiwTran-007
-def test_open_transaction_receipt_pdf(driver):
-    login = LoginPage(driver)
-    login.open_login()
-    login.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-
-    history = TransactionHistoryPage(driver)
-    history.open_index()
-
-    if history.count_rows() == 0:
+    if history.count() == 0:
         return
 
     history.open_first_receipt()
-    assert "/receipt/pdf" in driver.current_url
+    assert "/receipt/pdf" in history.current_url()

@@ -1,14 +1,12 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait, Select
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
+from pages.base_page import BasePage
 from config.env import BASE_URL
 
-class TransactionHistoryPage:
-    def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
+class TransactionHistoryPage(BasePage):
 
-    #selector
+    # Selector
     new_transaction_button = (By.CSS_SELECTOR, '[data-testid="transaction-new-button"]')
 
     table = (By.CSS_SELECTOR, '[data-testid="transaction-table"]')
@@ -23,47 +21,37 @@ class TransactionHistoryPage:
 
     report_download_button = (By.CSS_SELECTOR, '[data-testid="transaction-download-report"]')
 
-    #action
-    def open_index(self):
-        self.driver.get(f"{BASE_URL}/transactions")
-        self.wait.until(EC.visibility_of_element_located(self.table))
-
-    def count_rows(self):
-        return len(self.driver.find_elements(*self.rows))
+    # Action
+    def open(self):
+        self.open_url(f"{BASE_URL}/transactions")
+        self.is_visible(self.table)
 
     def filter_by_month_year(self, month, year):
-        Select(self.wait.until(
-            EC.element_to_be_clickable(self.month_filter)
-        )).select_by_value(str(month))
+        table = self.find(self.table)
 
-        Select(self.wait.until(
-            EC.element_to_be_clickable(self.year_filter)
-        )).select_by_value(str(year))
+        Select(self.find(self.month_filter)).select_by_value(str(month))
+        Select(self.find(self.year_filter)).select_by_value(str(year))
+        self.click(self.filter_submit)
 
-        self.driver.find_element(*self.filter_submit).click()
-        self.wait.until(EC.visibility_of_element_located(self.table))
+        self.wait.until(EC.staleness_of(table))
+
+        self.is_visible(self.table)
 
     def click_new_transaction(self):
-        self.wait.until(
-            EC.element_to_be_clickable(self.new_transaction_button)
-        ).click()
+        self.click(self.new_transaction_button)
 
     def open_first_detail(self):
-        self.wait.until(
-            EC.presence_of_all_elements_located(self.detail_buttons)
-        )[0].click()
+        self.find_all(self.detail_buttons)[0].click()
 
     def open_first_receipt(self):
-        self.wait.until(
-            EC.presence_of_all_elements_located(self.receipt_buttons)
-        )[0].click()
+        self.find_all(self.receipt_buttons)[0].click()
+
+    # Helpers
+    def count(self):
+        return len(self.find_all(self.rows))
 
     def get_report_download_url(self):
-        return self.driver.find_element(
-            *self.report_download_button
-        ).get_attribute("href")
-    
-    def download_report_pdf(self):
-        self.wait.until(
-            EC.element_to_be_clickable(self.report_download_button)
-        ).click()
+        return self.find(self.report_download_button).get_attribute("href")
+
+    def current_url(self):
+        return self.driver.current_url

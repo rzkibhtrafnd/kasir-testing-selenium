@@ -1,16 +1,12 @@
 import os
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.ui import WebDriverWait, Select
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from pages.base_page import BasePage
 from config.env import BASE_URL
 
-class ProductPage:
-    def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
+class ProductPage(BasePage):
 
-    #selector
+    # Selector
     add_button = (By.CSS_SELECTOR, '[data-testid="add-product-button"]')
     table = (By.CSS_SELECTOR, '[data-testid="product-table"]')
     rows = (By.CSS_SELECTOR, '[data-testid="product-row"]')
@@ -26,59 +22,43 @@ class ProductPage:
 
     success_message = (By.CSS_SELECTOR, '[data-testid="alert-success"]')
 
-    #actions
-    def open_index(self):
+    # Actions
+    def open(self):
         self.driver.get(f"{BASE_URL}/admin/products")
-        self.wait.until(EC.visibility_of_element_located(self.table))
+        self.is_visible(self.table)
 
-    def open_create(self):
-        self.wait.until(EC.element_to_be_clickable(self.add_button)).click()
+    def open_create_form(self):
+        self.click(self.add_button)
 
-    def select_category_by_text(self, category_name):
-        select_el = self.wait.until(
-            EC.visibility_of_element_located(self.category_select)
-        )
-        Select(select_el).select_by_visible_text(category_name)
+    def create(self, category, name, price, image_path):
+        select = Select(self.find(self.category_select))
+        select.select_by_visible_text(category)
 
-    def create_product(self, category, name, price, image_path):
-        self.select_category_by_text(category)
-
-        self.wait.until(
-            EC.visibility_of_element_located(self.name_input)
-        ).send_keys(name)
-
-        self.driver.find_element(*self.price_input).send_keys(price)
+        self.find(self.name_input).send_keys(name)
+        self.find(self.price_input).send_keys(price)
 
         abs_path = os.path.abspath(image_path)
-        self.driver.find_element(*self.image_input).send_keys(abs_path)
+        self.find(self.image_input).send_keys(abs_path)
 
-        self.driver.find_element(*self.submit_button).click()
+        self.click(self.submit_button)
 
-    def open_edit_first(self):
-        buttons = self.wait.until(
-            EC.presence_of_all_elements_located(self.edit_buttons)
-        )
-        buttons[0].click()
+    def open_first_edit(self):
+        self.find_all(self.edit_buttons)[0].click()
 
-    def update_product(self, name):
-        field = self.wait.until(EC.visibility_of_element_located(self.name_input))
+    def update_name(self, name):
+        field = self.find(self.name_input)
         field.clear()
         field.send_keys(name)
-        self.driver.find_element(*self.submit_button).click()
+        self.click(self.submit_button)
 
-    def delete_first_product(self):
-        buttons = self.wait.until(
-            EC.presence_of_all_elements_located(self.delete_buttons)
-        )
-        buttons[0].click()
+    def delete_first(self):
+        self.find_all(self.delete_buttons)[0].click()
+        self.driver.switch_to.alert.accept()
 
-        alert = self.wait.until(EC.alert_is_present())
-        alert.accept()
+    # Helpers
+    def count(self):
+        return len(self.find_all(self.rows))
 
     def get_success_message(self):
-        return self.wait.until(
-            EC.visibility_of_element_located(self.success_message)
-        ).text
-
-    def count_rows(self):
-        return len(self.driver.find_elements(*self.rows))
+        elements = self.driver.find_elements(*self.success_message)
+        return elements[0].text.lower() if elements else ""
