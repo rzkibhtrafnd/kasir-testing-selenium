@@ -2,7 +2,6 @@ from pages.login_page import LoginPage
 from pages.product_page import ProductPage
 from config.env import ADMIN_EMAIL, ADMIN_PASSWORD
 
-
 def test_admin_can_view_product_page(driver):
     login = LoginPage(driver)
     login.open_login()
